@@ -122,6 +122,22 @@ func TestParseRule(t *testing.T) {
 			name: "simple content",
 			rule: `alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1337; msg:"foo"; content:"AA"; rev:2);`,
 			want: &Rule{
+				Enabled:     true,
+				Action:      "alert",
+				Protocol:    "udp",
+				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
+				Destination: Network{Nets: []string{"$EXTERNAL_NET"}, Ports: []string{"any"}},
+				SID:         1337,
+				Revision:    2,
+				Description: "foo",
+				Contents:    []*Content{&Content{Pattern: []byte{0x41, 0x41}}},
+			},
+		},
+		{
+			name: "simple content disabled rule",
+			rule: `#alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1337; msg:"foo"; content:"AA"; rev:2);`,
+			want: &Rule{
+				Enabled:     false,
 				Action:      "alert",
 				Protocol:    "udp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -136,6 +152,7 @@ func TestParseRule(t *testing.T) {
 			name: "bidirectional",
 			rule: `alert udp $HOME_NET any <> $EXTERNAL_NET any (sid:1337; msg:"foo"; content:"AA"; rev:2);`,
 			want: &Rule{
+				Enabled:       true,
 				Action:        "alert",
 				Protocol:      "udp",
 				Source:        Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -151,6 +168,7 @@ func TestParseRule(t *testing.T) {
 			name: "not content",
 			rule: `alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1337; msg:"foo"; content:!"AA");`,
 			want: &Rule{
+				Enabled:     true,
 				Action:      "alert",
 				Protocol:    "udp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -164,6 +182,7 @@ func TestParseRule(t *testing.T) {
 			name: "multiple contents",
 			rule: `alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1337; msg:"foo"; content:"AA"; content:"BB");`,
 			want: &Rule{
+				Enabled:     true,
 				Action:      "alert",
 				Protocol:    "udp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -178,6 +197,7 @@ func TestParseRule(t *testing.T) {
 			name: "hex content",
 			rule: `alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1337; msg:"foo"; content:"A|42 43|D|45|");`,
 			want: &Rule{
+				Enabled:     true,
 				Action:      "alert",
 				Protocol:    "udp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -191,6 +211,7 @@ func TestParseRule(t *testing.T) {
 			name: "tags",
 			rule: `alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1337; msg:"foo"; content:!"AA"; classtype:foo);`,
 			want: &Rule{
+				Enabled:     true,
 				Action:      "alert",
 				Protocol:    "udp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -205,6 +226,7 @@ func TestParseRule(t *testing.T) {
 			name: "references",
 			rule: `alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1337; msg:"foo"; content:"A"; reference:cve,2014; reference:url,www.suricata-ids.org);`,
 			want: &Rule{
+				Enabled:     true,
 				Action:      "alert",
 				Protocol:    "udp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -219,6 +241,7 @@ func TestParseRule(t *testing.T) {
 			name: "content options",
 			rule: `alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1337; msg:"foo"; content:!"AA"; http_header; offset:3);`,
 			want: &Rule{
+				Enabled:     true,
 				Action:      "alert",
 				Protocol:    "udp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -236,6 +259,7 @@ func TestParseRule(t *testing.T) {
 			name: "multiple contents and options",
 			rule: `alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1; msg:"a"; content:"A"; http_header; fast_pattern; content:"B"; http_uri);`,
 			want: &Rule{
+				Enabled:     true,
 				Action:      "alert",
 				Protocol:    "udp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -252,6 +276,7 @@ func TestParseRule(t *testing.T) {
 			name: "multiple contents and multiple options",
 			rule: `alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1; msg:"a"; content:"A"; http_header; fast_pattern:0,42; nocase; content:"B"; http_uri);`,
 			want: &Rule{
+				Enabled:     true,
 				Action:      "alert",
 				Protocol:    "udp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -268,6 +293,7 @@ func TestParseRule(t *testing.T) {
 			name: "multiple contents with file_data",
 			rule: `alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1; msg:"a"; file_data; content:"A"; http_header; nocase; content:"B"; http_uri);`,
 			want: &Rule{
+				Enabled:     true,
 				Action:      "alert",
 				Protocol:    "udp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -284,6 +310,7 @@ func TestParseRule(t *testing.T) {
 			name: "multiple contents with file_data and pkt_data",
 			rule: `alert udp $HOME_NET any -> $EXTERNAL_NET any (sid:1; msg:"a"; file_data; content:"A"; http_header; nocase; content:"B"; http_uri; pkt_data; content:"C"; http_uri;)`,
 			want: &Rule{
+				Enabled:     true,
 				Action:      "alert",
 				Protocol:    "udp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},
@@ -301,6 +328,7 @@ func TestParseRule(t *testing.T) {
 			name: "Complex VRT rule",
 			rule: `alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"VRT BLACKLIST URI request for known malicious URI - /tongji.js"; flow:to_server,established; content:"/tongji.js"; fast_pattern:only; http_uri; content:"Host|3A| "; http_header; pcre:"/Host\x3a[^\r\n]*?\.tongji/Hi"; metadata:impact_flag red, policy balanced-ips drop, policy security-ips drop, ruleset community, service http; reference:url,labs.snort.org/docs/17904.html; classtype:trojan-activity; sid:17904; rev:6;)`,
 			want: &Rule{
+				Enabled:     true,
 				Action:      "alert",
 				Protocol:    "tcp",
 				Source:      Network{Nets: []string{"$HOME_NET"}, Ports: []string{"any"}},

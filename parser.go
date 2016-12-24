@@ -32,6 +32,8 @@ import (
 
 // Rule describes an IDS rule.
 type Rule struct {
+	// Enabled is the state of the rule.
+	Enabled bool
 	// Action is the action the rule will take (alert, pass, drop, etc.).
 	Action string
 	// Protocol is the protocol the rule looks at.
@@ -217,7 +219,15 @@ func (c *Content) FormatPattern() string {
 	return buffer.String()
 }
 
-// action decodes an IDS rule option based on its key.
+// comment decodes an IDS rule comment based on its key.
+func (r *Rule) comment(key item, l *lexer) error {
+	if key.typ != itemComment {
+		panic("item is not a comment")
+	}
+	r.Enabled = false
+	return nil
+}
+// action decodes an IDS rule action based on its key.
 func (r *Rule) action(key item, l *lexer) error {
 	if key.typ != itemAction {
 		panic("item is not an action")
@@ -420,8 +430,11 @@ func ParseRule(rule string) (*Rule, error) {
 		return nil, err
 	}
 	r := &Rule{}
+	r.Enabled = true
 	for item := l.nextItem(); item.typ != itemEOR && item.typ != itemEOF && err == nil; item = l.nextItem() {
 		switch item.typ {
+		case itemComment:
+			err = r.comment(item, l)
 		case itemAction:
 			err = r.action(item, l)
 		case itemProtocol:

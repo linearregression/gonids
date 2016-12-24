@@ -201,12 +201,19 @@ func lexRule(l *lexer) stateFn {
 
 // lexComment consumes a commented rule.
 func lexComment(l *lexer) stateFn {
-	switch l.next() {
+	// Need to continue lexing a rule as if it weren't commented.
+	r := l.next()
+	fmt.Sprintf("%s", r)
+	switch r {
 	case '\n':
 		l.emit(itemComment, false)
 		return lexRule
 	case eof:
 		l.backup()
+		l.emit(itemComment, false)
+		return lexRule
+	default:
+		// START HERE.
 		l.emit(itemComment, false)
 		return lexRule
 	}
